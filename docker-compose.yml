@@ -3,8 +3,14 @@ services:
     build: .
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:///./data/store_intelligence.db
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      LOG_LEVEL: info
+      STORE_LAYOUT_PATH: ./data/store_layout.json
+      POS_DATA_PATH: ./data/pos_transactions.csv
+      STALE_FEED_THRESHOLD_MINUTES: 10
     volumes:
       - ./data:/app/data
     restart: unless-stopped

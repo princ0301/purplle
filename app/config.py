@@ -3,7 +3,7 @@ from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    database_url: str
+    database_url: str = "sqlite+aiosqlite:///./data/store_intelligence.db"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     log_level: str = "info"
