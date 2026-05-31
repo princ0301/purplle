@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends
+import os
+from pathlib import Path
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text
 from app.database import get_db
@@ -53,14 +56,30 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         db_connected=db_connected,
     )
 
-from fastapi.responses import FileResponse
-from fastapi import HTTPException
-import os
+def _dashboard_dir() -> Path:
+    base = os.environ.get("APP_BASE_DIR")
+    if base:
+        return Path(base) / "dashboard"
+    return Path(__file__).resolve().parents[2] / "dashboard"
+
+
+def _dashboard_file(*parts: str) -> Path:
+    path = (_dashboard_dir().joinpath(*parts)).resolve()
+    if not path.exists() or _dashboard_dir().resolve() not in path.parents:
+        raise HTTPException(status_code=404, detail="Dashboard asset not found")
+    return path
+
 
 @router.get("/dashboard", include_in_schema=False)
 async def dashboard():
-    base = os.environ.get("APP_BASE_DIR", "/app")
-    path = os.path.join(base, "dashboard", "index.html")
-    if not os.path.exists(path):
-        raise HTTPException(status_code=404, detail=f"Dashboard not found at {path}")
-    return FileResponse(path)
+    return FileResponse(_dashboard_file("index.html"))
+
+
+@router.get("/dashboard/style/{filename}", include_in_schema=False)
+async def dashboard_style(filename: str):
+    return FileResponse(_dashboard_file("style", filename))
+
+
+@router.get("/dashboard/script/{filename}", include_in_schema=False)
+async def dashboard_script(filename: str):
+    return FileResponse(_dashboard_file("script", filename))
