@@ -54,10 +54,13 @@ async def health_check(db: AsyncSession = Depends(get_db)):
     )
 
 from fastapi.responses import FileResponse
+from fastapi import HTTPException
 import os
 
 @router.get("/dashboard", include_in_schema=False)
 async def dashboard():
-    path = os.path.join(os.path.dirname(__file__), '..', '..', 'dashboard', 'index.html')
-    path = os.path.abspath(path)
+    base = os.environ.get("APP_BASE_DIR", "/app")
+    path = os.path.join(base, "dashboard", "index.html")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"Dashboard not found at {path}")
     return FileResponse(path)
