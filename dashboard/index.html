@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Store Intelligence — ST1008</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #1e2533;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    header h1 span {
+      color: #6366f1;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 2s infinite;
+    }
+
+    .dot.stale { background: #f59e0b; animation: none; }
+    .dot.error { background: #ef4444; animation: none; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #161b27;
+      border: 1px solid #1e2533;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card-label {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .card-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #f8fafc;
+      line-height: 1;
+    }
+
+    .card-value.highlight { color: #6366f1; }
+    .card-value.warn { color: #f59e0b; }
+    .card-value.good { color: #22c55e; }
+
+    .card-sub {
+      font-size: 12px;
+      color: #475569;
+      margin-top: 6px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+
+    .funnel-stage {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #1e2533;
+    }
+
+    .funnel-stage:last-child { border-bottom: none; }
+
+    .funnel-label { font-size: 13px; color: #cbd5e1; }
+
+    .funnel-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .funnel-count {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f8fafc;
+      min-width: 40px;
+      text-align: right;
+    }
+
+    .funnel-drop {
+      font-size: 12px;
+      color: #ef4444;
+      min-width: 48px;
+      text-align: right;
+    }
+
+    .funnel-bar-wrap {
+      height: 4px;
+      background: #1e2533;
+      border-radius: 2px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .funnel-bar {
+      height: 100%;
+      background: #6366f1;
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    .zone-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #1e2533;
+    }
+
+    .zone-row:last-child { border-bottom: none; }
+
+    .zone-name {
+      font-size: 12px;
+      color: #94a3b8;
+      width: 140px;
+      flex-shrink: 0;
+    }
+
+    .zone-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: #1e2533;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .zone-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+
+    .zone-score {
+      font-size: 12px;
+      color: #64748b;
+      width: 36px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .anomaly {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: #1e2533;
+    }
+
+    .anomaly:last-child { margin-bottom: 0; }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .badge.INFO { background: #1e3a5f; color: #60a5fa; }
+    .badge.WARN { background: #3d2800; color: #f59e0b; }
+    .badge.CRITICAL { background: #3d0000; color: #ef4444; }
+
+    .anomaly-text { font-size: 13px; color: #cbd5e1; }
+    .anomaly-action { font-size: 11px; color: #64748b; margin-top: 3px; }
+
+    .no-anomalies {
+      font-size: 13px;
+      color: #475569;
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    .loading {
+      color: #334155;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Store Intelligence <span>ST1008</span> — Brigade Bangalore</h1>
+  <div class="status-bar">
+    <div class="dot" id="status-dot"></div>
+    <span id="status-text">Connecting...</span>
+    <span id="last-updated"></span>
+  </div>
+</header>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-label">Unique Visitors</div>
+    <div class="card-value highlight" id="visitors">—</div>
+    <div class="card-sub">Today</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Conversion Rate</div>
+    <div class="card-value" id="conversion">—</div>
+    <div class="card-sub">Visitors who purchased</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Queue Depth</div>
+    <div class="card-value" id="queue">—</div>
+    <div class="card-sub">Billing counter</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Abandonment Rate</div>
+    <div class="card-value" id="abandonment">—</div>
+    <div class="card-sub">Left billing queue</div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card">
+    <h2>Conversion Funnel</h2>
+    <div id="funnel-container"><span class="loading">Loading...</span></div>
+  </div>
+  <div class="card">
+    <h2>Zone Heatmap</h2>
+    <div id="heatmap-container"><span class="loading">Loading...</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Active Anomalies</h2>
+  <div id="anomalies-container"><span class="loading">Loading...</span></div>
+</div>
+
+<script>
+  const STORE_ID = 'ST1008'
+  const BASE = ''
+  const REFRESH_MS = 5000
+
+  function zoneColor(score) {
+    if (score >= 80) return '#6366f1'
+    if (score >= 50) return '#8b5cf6'
+    if (score >= 25) return '#a78bfa'
+    return '#4c1d95'
+  }
+
+  async function fetchJSON(url) {
+    const r = await fetch(url)
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    return r.json()
+  }
+
+  async function updateMetrics() {
+    const data = await fetchJSON(`${BASE}/stores/${STORE_ID}/metrics`)
+    document.getElementById('visitors').textContent = data.unique_visitors
+    document.getElementById('conversion').textContent =
+      (data.conversion_rate * 100).toFixed(1) + '%'
+
+    const qEl = document.getElementById('queue')
+    qEl.textContent = data.queue_depth
+    qEl.className = 'card-value' + (data.queue_depth >= 5 ? ' warn' : data.queue_depth === 0 ? ' good' : '')
+
+    document.getElementById('abandonment').textContent =
+      (data.abandonment_rate * 100).toFixed(1) + '%'
+  }
+
+  async function updateFunnel() {
+    const data = await fetchJSON(`${BASE}/stores/${STORE_ID}/funnel`)
+    const max = data.stages[0]?.visitors || 1
+    const html = data.stages.map(s => {
+      const pct = max > 0 ? (s.visitors / max) * 100 : 0
+      const drop = s.drop_off_pct > 0 ? `-${(s.drop_off_pct * 100).toFixed(0)}%` : ''
+      return `
+        <div class="funnel-stage">
+          <div>
+            <div class="funnel-label">${s.label}</div>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%"></div></div>
+          </div>
+          <div class="funnel-right">
+            <div class="funnel-count">${s.visitors}</div>
+            <div class="funnel-drop">${drop}</div>
+          </div>
+        </div>`
+    }).join('')
+    document.getElementById('funnel-container').innerHTML = html
+  }
+
+  async function updateHeatmap() {
+    const data = await fetchJSON(`${BASE}/stores/${STORE_ID}/heatmap`)
+    if (!data.zones.length) {
+      document.getElementById('heatmap-container').innerHTML =
+        '<span class="loading">No zone data yet</span>'
+      return
+    }
+    const html = data.zones.map(z => `
+      <div class="zone-row">
+        <div class="zone-name">${z.zone_id.replace(/_/g, ' ')}</div>
+        <div class="zone-bar-wrap">
+          <div class="zone-bar" style="width:${z.score}%;background:${zoneColor(z.score)}"></div>
+        </div>
+        <div class="zone-score">${z.score}</div>
+      </div>`
+    ).join('')
+    document.getElementById('heatmap-container').innerHTML = html
+  }
+
+  async function updateAnomalies() {
+    const data = await fetchJSON(`${BASE}/stores/${STORE_ID}/anomalies`)
+    if (!data.anomalies.length) {
+      document.getElementById('anomalies-container').innerHTML =
+        '<div class="no-anomalies">No active anomalies</div>'
+      return
+    }
+    const html = data.anomalies.map(a => `
+      <div class="anomaly">
+        <span class="badge ${a.severity}">${a.severity}</span>
+        <div>
+          <div class="anomaly-text">${a.detail}</div>
+          <div class="anomaly-action">${a.suggested_action}</div>
+        </div>
+      </div>`
+    ).join('')
+    document.getElementById('anomalies-container').innerHTML = html
+  }
+
+  async function updateHealth() {
+    const data = await fetchJSON(`${BASE}/health`)
+    const dot = document.getElementById('status-dot')
+    const text = document.getElementById('status-text')
+    const store = data.stores.find(s => s.store_id === STORE_ID)
+
+    if (!data.db_connected) {
+      dot.className = 'dot error'
+      text.textContent = 'DB unavailable'
+    } else if (store?.status === 'STALE_FEED') {
+      dot.className = 'dot stale'
+      text.textContent = 'Stale feed'
+    } else {
+      dot.className = 'dot'
+      text.textContent = 'Live'
+    }
+  }
+
+  async function refresh() {
+    try {
+      await Promise.all([
+        updateMetrics(),
+        updateFunnel(),
+        updateHeatmap(),
+        updateAnomalies(),
+        updateHealth(),
+      ])
+      const now = new Date()
+      document.getElementById('last-updated').textContent =
+        'Updated ' + now.toLocaleTimeString()
+    } catch (e) {
+      console.error('Refresh error:', e)
+      document.getElementById('status-dot').className = 'dot error'
+      document.getElementById('status-text').textContent = 'API error'
+    }
+  }
+
+  refresh()
+  setInterval(refresh, REFRESH_MS)
+</script>
+</body>
+</html>
