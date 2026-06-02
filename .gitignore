@@ -12,7 +12,7 @@ env/
 
 .env
 
-data/
+data/CCTV
 docs/DEMO_SCRIPT.md
 docs/GCP_DEPLOY.md
 docs/PRESENTATION.md

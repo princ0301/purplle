@@ -1,0 +1,202 @@
+{
+  "store_id": "ST1008",
+  "store_name": "Brigade_Bangalore",
+  "city": "Bangalore",
+  "address": "Brigade Road, Bangalore - 560025",
+  "open_hours": {
+    "monday": {
+      "open": "10:00",
+      "close": "22:00"
+    },
+    "tuesday": {
+      "open": "10:00",
+      "close": "22:00"
+    },
+    "wednesday": {
+      "open": "10:00",
+      "close": "22:00"
+    },
+    "thursday": {
+      "open": "10:00",
+      "close": "22:00"
+    },
+    "friday": {
+      "open": "10:00",
+      "close": "22:30"
+    },
+    "saturday": {
+      "open": "09:30",
+      "close": "22:30"
+    },
+    "sunday": {
+      "open": "10:00",
+      "close": "22:00"
+    }
+  },
+  "cameras": [
+    {
+      "camera_id": "CAM_1",
+      "label": "Main Floor - Skincare Wall",
+      "type": "floor",
+      "covers_zones": [
+        "SKINCARE_WALL",
+        "FLOOR_CENTER",
+        "MAKEUP_TABLE"
+      ],
+      "overlap_with": [
+        "CAM_2"
+      ]
+    },
+    {
+      "camera_id": "CAM_2",
+      "label": "Entry / Exit Threshold",
+      "type": "entry_exit",
+      "covers_zones": [
+        "ENTRY_ZONE",
+        "FLOOR_CENTER"
+      ],
+      "overlap_with": [
+        "CAM_1"
+      ]
+    },
+    {
+      "camera_id": "CAM_3",
+      "label": "Back Wall",
+      "type": "floor",
+      "covers_zones": [
+        "FACESHOP_ZONE",
+        "GOODVIBES_ZONE",
+        "DERMA_ZONE"
+      ],
+      "overlap_with": [
+        "CAM_1"
+      ]
+    },
+    {
+      "camera_id": "CAM_4",
+      "label": "Stockroom / Back Office",
+      "type": "stockroom",
+      "covers_zones": ["STOCKROOM"],
+      "overlap_with": []
+    },
+    {
+      "camera_id": "CAM_5",
+      "label": "Overhead Floor View",
+      "type": "overhead",
+      "covers_zones": [
+        "FLOOR_CENTER",
+        "ROTATING_STAND",
+        "MAKEUP_TABLE"
+      ],
+      "overlap_with": [
+        "CAM_1",
+        "CAM_3"
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "zone_id": "ENTRY_ZONE",
+      "zone_name": "Entry / Exit",
+      "sku_zone": null,
+      "type": "entry_exit",
+      "camera_ids": [
+        "CAM_2"
+      ]
+    },
+    {
+      "zone_id": "SKINCARE_WALL",
+      "zone_name": "Skincare Wall",
+      "sku_zone": "SKINCARE",
+      "type": "product_zone",
+      "camera_ids": [
+        "CAM_1"
+      ]
+    },
+    {
+      "zone_id": "FACESHOP_ZONE",
+      "zone_name": "The Face Shop",
+      "sku_zone": "FACE_CARE",
+      "type": "product_zone",
+      "camera_ids": [
+        "CAM_1",
+        "CAM_3"
+      ]
+    },
+    {
+      "zone_id": "GOODVIBES_ZONE",
+      "zone_name": "Good Vibes",
+      "sku_zone": "NATURAL_CARE",
+      "type": "product_zone",
+      "camera_ids": [
+        "CAM_3"
+      ]
+    },
+    {
+      "zone_id": "DERMA_ZONE",
+      "zone_name": "Derma & De-Tan",
+      "sku_zone": "DERMA",
+      "type": "product_zone",
+      "camera_ids": [
+        "CAM_3"
+      ]
+    },
+    {
+      "zone_id": "MAKEUP_TABLE",
+      "zone_name": "Makeup Display Table",
+      "sku_zone": "MAKEUP",
+      "type": "product_zone",
+      "camera_ids": [
+        "CAM_1",
+        "CAM_5"
+      ]
+    },
+    {
+      "zone_id": "ROTATING_STAND",
+      "zone_name": "Rotating Product Stand",
+      "sku_zone": "IMPULSE_BUY",
+      "type": "product_zone",
+      "camera_ids": [
+        "CAM_1",
+        "CAM_5"
+      ]
+    },
+    {
+      "zone_id": "FLOOR_CENTER",
+      "zone_name": "Main Floor Aisle",
+      "sku_zone": null,
+      "type": "transit_zone",
+      "camera_ids": [
+        "CAM_1",
+        "CAM_2",
+        "CAM_5"
+      ]
+    },
+    {
+      "zone_id": "BILLING_ZONE",
+      "zone_name": "Billing Counter",
+      "sku_zone": null,
+      "type": "billing",
+      "camera_ids": [
+        "CAM_4"
+      ]
+    },
+    {
+      "zone_id": "CONSULTATION_AREA",
+      "zone_name": "Beauty Consultation",
+      "sku_zone": "PREMIUM",
+      "type": "service_zone",
+      "camera_ids": [
+        "CAM_4"
+      ]
+    }
+  ],
+  "staff_identifiers": {
+    "method": "uniform_color",
+    "description": "Store staff wear light grey or white uniform tops.",
+    "hint_zones": [
+      "BILLING_ZONE",
+      "CONSULTATION_AREA"
+    ]
+  }
+}
