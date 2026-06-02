@@ -13,3 +13,6 @@ env/
 .env
 
 data/
+docs/DEMO_SCRIPT.md
+docs/GCP_DEPLOY.md
+docs/PRESENTATION.md

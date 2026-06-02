@@ -1,9 +1,26 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import event
 from app.config import get_settings
+from pathlib import Path
+from urllib.parse import unquote
 
 settings = get_settings()
+
+
+def _ensure_sqlite_parent_dir(database_url: str) -> None:
+    if not database_url.startswith("sqlite"):
+        return
+
+    db_path = unquote(database_url.split(":///", 1)[1]) if ":///" in database_url else ""
+    if db_path in ("", ":memory:") or database_url.endswith(":memory:"):
+        return
+
+    parent = Path(db_path).expanduser().parent
+    if str(parent) and str(parent) != ".":
+        parent.mkdir(parents=True, exist_ok=True)
+
+
+_ensure_sqlite_parent_dir(settings.database_url)
 
 connect_args = {}
 if "sqlite" in settings.database_url:
