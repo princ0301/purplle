@@ -6,7 +6,7 @@ from app.models import EventRecord
 from app.metrics import get_metrics
 from app.funnel import get_funnel
 from app.anomalies import get_anomalies
-from datetime import datetime, timezone
+from app.time_windows import get_event_window
 
 router = APIRouter()
 
@@ -23,8 +23,7 @@ async def store_funnel(store_id: str, db: AsyncSession = Depends(get_db)):
 
 @router.get("/stores/{store_id}/heatmap")
 async def store_heatmap(store_id: str, db: AsyncSession = Depends(get_db)):
-    now = datetime.now(timezone.utc)
-    today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    window = await get_event_window(store_id, db)
 
     result = await db.execute(
         select(EventRecord)
@@ -32,7 +31,8 @@ async def store_heatmap(store_id: str, db: AsyncSession = Depends(get_db)):
         .where(EventRecord.is_staff == False)
         .where(EventRecord.event_type.in_(["ZONE_ENTER", "ZONE_DWELL"]))
         .where(EventRecord.zone_id != None)
-        .where(EventRecord.timestamp >= today_start)
+        .where(EventRecord.timestamp >= window.start)
+        .where(EventRecord.timestamp <= window.end)
     )
     events = result.scalars().all()
 
@@ -47,7 +47,13 @@ async def store_heatmap(store_id: str, db: AsyncSession = Depends(get_db)):
             zone_data[z]["total_dwell_ms"] += e.dwell_ms
 
     if not zone_data:
-        return {"store_id": store_id, "zones": [], "data_confidence": "LOW"}
+        return {
+            "store_id": store_id,
+            "date": window.date.isoformat(),
+            "is_fallback": window.is_fallback,
+            "zones": [],
+            "data_confidence": "LOW",
+        }
 
     max_visits = max(z["visits"] for z in zone_data.values()) or 1
     total_sessions = len(set(e.visitor_id for e in events))
@@ -67,7 +73,13 @@ async def store_heatmap(store_id: str, db: AsyncSession = Depends(get_db)):
 
     zones.sort(key=lambda z: z["score"], reverse=True)
 
-    return {"store_id": store_id, "zones": zones, "data_confidence": confidence}
+    return {
+        "store_id": store_id,
+        "date": window.date.isoformat(),
+        "is_fallback": window.is_fallback,
+        "zones": zones,
+        "data_confidence": confidence,
+    }
 
 
 @router.get("/stores/{store_id}/anomalies")

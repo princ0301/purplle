@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
+from sqlalchemy import select
 from app.models import EventRecord
-from datetime import datetime, timezone, timedelta, date
+from app.time_windows import get_event_window
+from datetime import datetime, timedelta
 import csv
 import os
 import logging
@@ -9,31 +10,23 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-UTC = timezone.utc
-
-def _today_bounds():
-    now = datetime.now(UTC).replace(tzinfo=None)
-    start = datetime(now.year, now.month, now.day).strftime('%Y-%m-%d %H:%M:%S')
-    end = datetime(now.year, now.month, now.day, 23, 59, 59).strftime('%Y-%m-%d %H:%M:%S')
-    return start, end
-
-
 async def get_metrics(store_id: str, db: AsyncSession) -> dict:
-    start, end = _today_bounds()
+    window = await get_event_window(store_id, db)
 
     result = await db.execute(
         select(EventRecord)
         .where(EventRecord.store_id == store_id)
         .where(EventRecord.is_staff.is_(False))
-        .where(text(f"timestamp >= '{start}'"))
-        .where(text(f"timestamp <= '{end}'"))
+        .where(EventRecord.timestamp >= window.start)
+        .where(EventRecord.timestamp <= window.end)
     )
     events = result.scalars().all()
 
     if not events:
         return {
             "store_id": store_id,
-            "date": date.today().isoformat(),
+            "date": window.date.isoformat(),
+            "is_fallback": window.is_fallback,
             "unique_visitors": 0,
             "conversion_rate": 0.0,
             "avg_dwell_per_zone": {},
@@ -65,7 +58,8 @@ async def get_metrics(store_id: str, db: AsyncSession) -> dict:
 
     return {
         "store_id": store_id,
-        "date": date.today().isoformat(),
+        "date": window.date.isoformat(),
+        "is_fallback": window.is_fallback,
         "unique_visitors": unique_visitors,
         "conversion_rate": conversion_rate,
         "avg_dwell_per_zone": avg_dwell,

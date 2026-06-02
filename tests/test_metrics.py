@@ -5,6 +5,7 @@
 
 import pytest
 from tests.conftest import make_event
+from datetime import datetime, timezone, timedelta
 
 pytestmark = pytest.mark.asyncio
 
@@ -77,3 +78,16 @@ async def test_metrics_avg_dwell(client):
     await client.post("/events/ingest", json={"events": events})
     r = await client.get("/stores/ST1008/metrics")
     assert "SKINCARE_WALL" in r.json()["avg_dwell_per_zone"]
+
+
+async def test_metrics_falls_back_to_latest_event_day(client):
+    old_ts = (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    events = [
+        make_event("ENTRY", visitor_id="VIS_old01", timestamp=old_ts),
+        make_event("ZONE_DWELL", visitor_id="VIS_old01", zone_id="SKINCARE_WALL", dwell_ms=45000, timestamp=old_ts),
+    ]
+    await client.post("/events/ingest", json={"events": events})
+    r = await client.get("/stores/ST1008/metrics")
+    body = r.json()
+    assert body["unique_visitors"] == 1
+    assert body["is_fallback"] is True

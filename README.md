@@ -35,6 +35,9 @@ http://localhost:8000/dashboard
 ```
 
 SQLite is created automatically at `data/store_intelligence.db`.
+If no events exist for the current UTC day, analytics endpoints fall back to the
+most recent day with events so the dashboard still shows the latest available
+store activity.
 
 ## Run Without Docker
 
